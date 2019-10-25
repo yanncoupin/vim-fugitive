@@ -494,15 +494,21 @@ function! fugitive#Head(...) abort
   if empty(dir) || !filereadable(fugitive#Find('.git/HEAD', dir))
     return ''
   endif
+  let mtime = getftime(fugitive#Find('.git/HEAD', dir))
+  if exists('b:fugitive_head_cache_mtime') && mtime == b:fugitive_head_cache_mtime
+    return b:fugitive_head_cache
+  endif
   let head = readfile(fugitive#Find('.git/HEAD', dir))[0]
+  let b:fugitive_head_cache_mtime = mtime
   if head =~# '^ref: '
-    return substitute(head, '\C^ref: \%(refs/\%(heads/\|remotes/\|tags/\)\=\)\=', '', '')
+    let b:fugitive_head_cache = substitute(head, '\C^ref: \%(refs/\%(heads/\|remotes/\|tags/\)\=\)\=', '', '')
   elseif head =~# '^\x\{40,\}$'
     let len = a:0 ? a:1 : 0
-    return len < 0 ? head : len ? head[0:len-1] : ''
+    let b:fugitive_head_cache = len < 0 ? head : len ? head[0:len-1] : ''
   else
-    return ''
+    let b:fugitive_head_cache = ''
   endif
+  return b:fugitive_head_cache
 endfunction
 
 function! fugitive#RevParse(rev, ...) abort
