@@ -491,10 +491,14 @@ endfunction
 
 function! fugitive#Head(...) abort
   let dir = a:0 > 1 ? a:2 : s:Dir()
-  if empty(dir) || !filereadable(fugitive#Find('.git/HEAD', dir))
+  if empty(dir) 
     return ''
   endif
-  let mtime = getftime(fugitive#Find('.git/HEAD', dir))
+  try
+    let mtime = getftime(fugitive#Find('.git/HEAD', dir))
+  catch
+    return ''
+  endtry
   if exists('b:fugitive_head_cache_mtime') && mtime == b:fugitive_head_cache_mtime
     return b:fugitive_head_cache
   endif
